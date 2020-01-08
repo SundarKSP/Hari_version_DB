@@ -1,0 +1,5 @@
+listen_addresses = '*'
+log_timezone = 'UCT'
+datestyle = 'iso, mdy'
+timezone = 'UCT'
+default_text_search_config = 'pg_catalog.english'

@@ -1,0 +1,8 @@
+Step 3: Create(Build) Image with following Command from New Folder
+docker build --build-arg http_proxy=http://proxy.ebiz.verizon.com:80 --build-arg https_proxy=http://proxy.ebiz.verizon.com:80 --build-arg NO_PROXY=169.254.169.254,127.0.0.1,.vzbi.com,.verizon.com -t kanduha/postgres92 .
+
+Step 4: Run the Container in Background with following command
+docker run -p 5555:5432 --name postgresql -d kanduha/postgres92
+
+Step 5: Run the following command on Devx Machine(password is pass123)
+psql -h localhost -p 5555 -U postgres -W

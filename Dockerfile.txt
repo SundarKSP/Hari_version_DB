@@ -1,0 +1,53 @@
+# Base Image
+FROM oneartifactorycloud.vpc.verizon.com:8091/devx/jdk-maven:3.5.4-jdk8-3
+
+#PROXY ENVIRONMENT VARAIABLES
+ENV HTTP_PROXY "http://proxy.ebiz.verizon.com:80"
+ENV HTTPS_PROXY "http://proxy.ebiz.verizon.com:80"
+ENV NO_PROXY "169.254.169.254,.verizon.com"
+
+# Install postgresql
+RUN yum update -y && \
+    yum -y install systemd \
+    yum install postgresql-server postgresql-contrib && \
+    yum install -y sudo \
+    pwgen \
+    yum clean all
+RUN echo pass123 > /var/lib/pgsql/postgres.password
+RUN chown postgres:postgres /var/lib/pgsql/data/
+RUN chmod go-rwx /var/lib/pgsql/data/
+
+RUN touch /var/lib/pgsql/initdb.log
+RUN chown postgres:postgres /var/lib/pgsql/initdb.log
+RUN chmod go-rwx /var/lib/pgsql/initdb.log
+
+RUN su -l postgres -c "/usr/bin/initdb -D /var/lib/pgsql/data/ --username=postgres --pwfile=/var/lib/pgsql/postgres.password"
+
+RUN mkdir /var/lib/pgsql/data//pg_log
+RUN chown postgres:postgres /var/lib/pgsql/data//pg_log
+RUN chmod go-rwx /var/lib/pgsql/data//pg_log
+
+
+COPY pg_hba.conf /var/lib/pgsql/data/pg_hba.conf
+COPY postgresql.conf /var/lib/pgsql/data/postgresql.conf
+
+# Copy
+COPY postgresql.sh /usr/local/bin/postgresql.sh
+
+# Change own user
+RUN chown -R postgres:postgres /var/lib/pgsql/data/* && \
+    usermod -G wheel postgres && \
+    sed -i 's/.*requiretty$/#Defaults requiretty/' /etc/sudoers && \
+    chmod +x /usr/local/bin/postgresql.sh
+
+# Expose ports.
+EXPOSE 5432
+
+#Working Directory
+WORKDIR /var/lib/pgsql
+
+# Set username
+USER postgres
+
+# Run PostgreSQL Server
+CMD ["/bin/bash", "/usr/local/bin/postgresql.sh"]
